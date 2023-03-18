@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitor TDAH (0.9)</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+      }
+      #output {
+        margin-top: 20px;
+        white-space: pre-wrap;
+      }
+      .old-book-style {
+        font-family: "Times New Roman", Times, serif;
+        font-size: 18px;
+        line-height: 1.5;
+        background-color: #f4e9d8;
+        color: #5e442b;
+        padding: 20px;
+      }
+      .dark-mode-style {
+        background-color: #333333;
+        color: #ffffff;
+      }
+      footer {
+        font-size: 0.8em;
+        text-align: center;
+      }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/7.1.1/docx.min.js"></script> 
+   </head> 
+   <body> 
+      <p>"<strong>Leitor TDAH</strong> (versão 0.9) Compatível com .txt salvo em UTF-8, .pdf primeira página somente.</p>
+     <input type="file" id="file-input"> 
+     <br> 
+     <textarea id="text-input"></textarea> 
+     <br> 
+     <button id="submit-button">Enviar</button>
+
+     
+
+     Selecione o estilo:
+     <select id="style-select">
+       <option value="">Padrão</option>
+       <option value="old-book-style">Livro Antigo</option>
+       <option value="dark-mode-style">Modo Noturno</option> 
+     </select>
+
+     <div id="output"></div>
+
+     <script> 
+       function handleFileSelect(evt) { 
+         var file = evt.target.files[0]; 
+
+         if (file.type === 'application/pdf') { 
+           var reader = new FileReader(); 
+
+           reader.onload = function(e) { 
+             var typedarray = new Uint8Array(e.target.result); 
+
+             pdfjsLib.getDocument(typedarray).promise.then(function(pdf) { 
+
+               pdf.getPage(1).then(function(page) { 
+
+                 page.getTextContent().then(function(textContent) { 
+
+                   var textItems = textContent.items; 
+                   var finalString = ""; 
+
+                   for (var i=0; i<textItems.length; i++) { 
+                     var item = textItems[i]; 
+
+                     finalString += item.str + " "; 
+                   } 
+
+                   displayText(finalString); }); }); }); } ;reader.readAsArrayBuffer(file); } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') { docx.DocxReader.loadFile(file).then(function(doc){ doc.getDocument().then(function(document){ document.getParagraphs().then(function(paragraphs){ let textContent = paragraphs.map(p => p.text).join('\n'); displayText(textContent); }) }) }) } else if (file.type.match('text.*')) { var reader = new FileReader(); reader.onload = function(e) { var text = e.target.result; displayText(text); } ;reader.readAsText(file); } else { alert("Por favor selecione um arquivo de texto ou PDF ou DOCX."); } }
+
+       function displayText(text) { var words = text.split(" "); var formattedWords = words.map(function(word) { return "<b>" + word.slice(0, 3) + "</b>" + word.slice(3); }); document.getElementById("output").innerHTML = formattedWords.join(" "); }
+
+       document.getElementById('file-input').addEventListener('change', handleFileSelect, false);
+
+       document.getElementById('submit-button').addEventListener('click', function() {
+         var text = document.getElementById('text-input').value; displayText(text);
+       });
+
+       document.getElementById('style-select').addEventListener('change', function() {
+         var styleClass = this.value; document.getElementById("output").className = styleClass; });
+     </script> </body><footer>2023 - Luminiverso</footer> </html> 
